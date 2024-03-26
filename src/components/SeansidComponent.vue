@@ -2,13 +2,35 @@
     <div class="kava">
         <h1>Kinokava</h1>
         <div class="container">
-        
-            <div v-for="seanss in seansid" :key="seanss.id">
+          <div>
+              <select v-model="valitudZanr">
+                  <option disabled value="">Vali zanr</option>
+                  <option v-for="valik in zanrValikud" :key="valik" >{{ valik }}</option>
+                </select>
+
+                <select v-model="valitudVanusepiirang">
+                  <option disabled value="">Vali vanusepiirang</option>
+                  <option v-for="valik in vanusepiirangValikud" :key="valik" >{{ valik }}</option>
+                </select>
+
+                <select v-model="valitudAlgusaeg">
+                  <option disabled value="">Vali algusaeg</option>
+                  <option v-for="valik in algusaegValikud" :key="valik" >{{ valik }}</option>
+                </select>
+
+                <select v-model="valitudKeel">
+                  <option disabled value="">Vali keel</option>
+                  <option v-for="valik in keelValikud" :key="valik" >{{ valik }}</option>
+                </select>
+                
+        </div>
+
+            <div v-for="seanss in seansid" :key="seanss.id" @click="näitaSaali(seanss)">
                 
                 <div class="kuupäev" v-bind:praeguneKuupäev="seanss.kuupäev" v-if="praeguneKuupäev!==seanss.kuupäev">{{ formatKuupäev(seanss.kuupäev) }}</div>
                 <h2 class="pealkiri"> {{ seanss.film.pealkiri }} </h2>
                 
-                <div class="seanss">  
+                <div id="muutuv" class="seanss">  
                 <img class="pilt" :src="seanss.film.pilt"/>
                 <div class= 'kirjeldus'>
                     <h3 > algusaeg: {{ seanss.algusAeg }} </h3>
@@ -20,7 +42,7 @@
                 </div>
             </div>
 
-            <button class="center">Soovita filme</button>
+            <button >Soovita filme</button>
         </div>
     </div>
  </template>
@@ -28,30 +50,56 @@
 <script>
 export default {
   name: "SeansidComponent",
+  
   data() {
     return {
       seansid: [],
       praeguneKuupäev: null,
+      valitudVanusepiirang: null,
+      valitudAlgusaeg: null,
+      valitudZanr: null,
+      valitudKeel: null,
+      vanusepiirangValikud: [],
+      algusaegValikud: [],
+      zanrValikud: [],
+      keelValikud: [],
     };
   },
   methods: {
     fetchSeansid() {
       fetch(`http://localhost:8080/seansid`)
         .then((response) => response.json())
-        .then((data) => (this.seansid = data))
+        .then((data) => {
+          this.seansid = data;
+
+          this.vanusepiirangValikud = [...new Set(data.map(seanss => seanss.film.vanusepiirang))];
+          this.algusaegValikud = [...new Set(data.map(seanss => seanss.algusAeg.split(':')[0]))];
+          this.zanrValikud = [...new Set(data.map(seanss => seanss.film.zanr))];
+          this.keelValikud = [...new Set(data.map(seanss => seanss.keel))];
+
+        
+        })
         .catch((err) => console.log(err.message));
     },
     formatKuupäev(kp) {
       const [aasta, kuu, päev] = kp.split('-');
       return `${päev}.${kuu}.${aasta}`;
     },
-  },
-  
-  mounted() {
-    this.fetchSeansid();
-    console.log("mounted");
-  },
+    näitaSaali(seanss) {
+      
+      console.log(typeof seanss.saal.istekohad, seanss.saal.istekohad)
+      this.$router.push({ name: 'SaalComponent', params: { saalId: seanss.saal.id}});
 
+    },
+
+    
+    },
+    mounted() {
+      this.fetchSeansid();
+      console.log("mounted");
+    },
+
+  
 };
 </script>
 
@@ -63,6 +111,9 @@ export default {
     object-fit: cover; 
     border-radius: 10px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 5);
+}
+#muutuv:hover{
+  background-color:   rgb(203, 203, 229);
 }
 .seanss{
     display: flex;
