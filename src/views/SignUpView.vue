@@ -23,6 +23,10 @@
   
     methods: {
         SignUp() {
+          if (!this.email || !this.parool) {
+            this.errMsg = 'Täida kõik lahtrid!';
+            return;
+          }
         var data = {
           email: this.email,
           parool: this.parool
