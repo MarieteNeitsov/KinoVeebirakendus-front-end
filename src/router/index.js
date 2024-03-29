@@ -2,7 +2,7 @@
 import SeansidComponent from '@/components/SeansidComponent.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import SaalComponent from '@/components/SaalComponent.vue'
-import LoginView from "@/views/LoginView.vue"
+
 import SignUpView from "@/views/SignUpView.vue"
 import SoovitusedComponent from '@/components/SoovitusedComponent.vue'
 
@@ -18,11 +18,6 @@ const routes = [
     name: 'SaalComponent',
     component: SaalComponent,
     props: true 
-},
-{
-    path: "/login",
-    name: "LoginView",
-    component: LoginView,
 },
 {
     path: "/soovitused",
