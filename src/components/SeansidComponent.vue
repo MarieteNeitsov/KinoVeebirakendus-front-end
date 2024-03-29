@@ -4,26 +4,29 @@
         <div class="container">
           <div>
               <select v-model="valitudZanr">
-                  <option disabled value="">Vali zanr</option>
+                  <option value=null>Vali zanr</option>
                   <option v-for="valik in zanrValikud" :key="valik" >{{ valik }}</option>
                 </select>
 
                 <select v-model="valitudVanusepiirang">
-                  <option disabled value="">Vali vanusepiirang</option>
+                  <option value=null>Vali vanusepiirang</option>
                   <option v-for="valik in vanusepiirangValikud" :key="valik" >{{ valik }}</option>
                 </select>
 
                 <select v-model="valitudAlgusaeg">
-                  <option disabled value="">Vali algusaeg</option>
+                  <option value=null>Vali algusaeg</option>
                   <option v-for="valik in algusaegValikud" :key="valik" >{{ valik }}</option>
                 </select>
 
                 <select v-model="valitudKeel">
-                  <option disabled value="">Vali keel</option>
+                  <option value=null>Vali keel</option>
                   <option v-for="valik in keelValikud" :key="valik" >{{ valik }}</option>
                 </select>
                 
         </div>
+
+        <button v-if="this.userId === null" @click='this.$router.push("/signup")'>Logi sisse</button>
+        <button v-else @click="logout()">Logi välja</button>
 
             <div v-for="seanss in seansid" :key="seanss.id" @click="näitaSaali(seanss)">
                 
@@ -41,8 +44,8 @@
                 </div>
                 </div>
             </div>
-
-            <button >Soovita filme</button>
+            
+            <button v-if="this.userId!=null" @click="soovitaFilme()">Soovita filme</button>
         </div>
     </div>
  </template>
@@ -50,6 +53,11 @@
 <script>
 export default {
   name: "SeansidComponent",
+  created() {
+    window.addEventListener('beforeunload', () => {
+      localStorage.clear();
+    });
+  },
   
   data() {
     return {
@@ -63,8 +71,19 @@ export default {
       algusaegValikud: [],
       zanrValikud: [],
       keelValikud: [],
+      userId: null
     };
   },
+  watch:{
+    
+    valitudZanr: 'filtreeri',
+    valitudVanusepiirang: 'filtreeri',
+    valitudAlgusaeg: 'filtreeri',
+    valitudKeel: 'filtreeri',
+    
+    
+  },
+
   methods: {
     fetchSeansid() {
       fetch(`http://localhost:8080/seansid`)
@@ -81,6 +100,15 @@ export default {
         })
         .catch((err) => console.log(err.message));
     },
+    filtreeri(){
+      fetch(`http://localhost:8080/seansid/filter?vanusepiirang=${this.valitudVanusepiirang}&algusaeg=${this.valitudAlgusaeg}&zanr=${this.valitudZanr}&keel=${this.valitudKeel}`)
+        .then((response) => response.json())
+        .then((data) => {
+          this.seansid = data;
+        })
+        .catch((err) => console.log(err.message));
+
+    },
     formatKuupäev(kp) {
       const [aasta, kuu, päev] = kp.split('-');
       return `${päev}.${kuu}.${aasta}`;
@@ -88,23 +116,39 @@ export default {
     näitaSaali(seanss) {
       
       console.log(typeof seanss.saal.istekohad, seanss.saal.istekohad)
-      this.$router.push({ name: 'SaalComponent', params: { saalId: seanss.saal.id}});
+      this.$router.push({ name: 'SaalComponent', params: { saalId: seanss.saal.id, seanssId: seanss.id}});
 
     },
-
+    soovitaFilme() {
     
+      const userId = localStorage.getItem('userId');
+      this.$router.push({ name: 'SoovitusedComponent', params: { userId: userId }});
+    },
+    logout() {
+    
+      localStorage.clear();
+      this.userId = null;
+      this.$router.push('/');
+    
+  }
     },
     mounted() {
       this.fetchSeansid();
+      this.userId = localStorage.getItem("userId")
+      console.log(localStorage.getItem("userId"))
       console.log("mounted");
+      
     },
+
 
   
 };
 </script>
 
 <style scoped>
-
+.kava{
+  background-color: rgb(18, 18, 24);
+}
 .pilt {
     width: 200px;  
     height: 300px; 

@@ -1,7 +1,6 @@
 <template>
     <div class="container">
       <h2>Vali kohad filmile </h2>
-      <h1>Seansi algus: </h1>
       
       <div class="saalContainer" v-if="istekohad.length">
         <div class="rida valgetekst" v-for="reaNumber in istekohad.length / 15" :key="'rida:' + reaNumber">
@@ -14,6 +13,8 @@
         <label class="valgetekst" for="kohtadeArv">Sisesta kohtade arv soovituse saamiseks:</label>
         <input type="number" name="kohteArv" required v-model="kohtadeArv">
         <button @click="leiaKohad(this.kohtadeArv)" >Soovita!</button>
+        <h3 v-if="this.msg">{{this.msg}}</h3>
+        <button v-if="this.kohtadeNumbrid.length!=0 && this.userId!=null" @click="salvestaSeanss(this.$route.params.seanssId,this.userId)">Broneeri!</button>
 
       </div>
     </div>
@@ -27,12 +28,17 @@
         istekohad: [],
         kohtadeArv: 1,
         kohtadeNumbrid: [],
+        userId: null,
+        msg: ''
         
       };
     },
     mounted() {
         this.fetchSaal()
+        this.userId=localStorage.getItem("userId")
         console.log("mounted saal")
+        console.log(this.$route.params.seanssId)
+        console.log(localStorage.getItem("userId"))
        
     },
     methods: {
@@ -50,14 +56,40 @@
             fetch(`http://localhost:8080/saal/${this.$route.params.saalId}/soovita/${kohtadeArv}`)
                 .then((response) => response.json())
                 .then((data) => {
-                    this.kohtadeNumbrid = data
-                    this.fetchSaal()
-                
-                
+                    if(data.length === 0){
+                        this.msg = "Selline arv istekohti ei saa kõrvuti broneerida";
+                    } else {
+                        this.kohtadeNumbrid = data;
+                        this.fetchSaal();
+                    }
+                    
                 })
                 .catch((err) => console.log(err.message));
 
-        }
+        },
+        salvestaSeanss(seanssId,userId){
+            
+        fetch(`http://localhost:8080/salvestaSeanss/${seanssId}/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+            credentials: 'include', 
+        })
+        .then((response) => {
+            if (!response.ok) {
+            throw new Error('serveri error');
+        }})
+        .then(() => {
+    
+          this.$router.push("/");
+        })
+        .catch((e) => {
+          console.log(e);
+          
+          
+        });
+    }
       
     },
     
@@ -65,6 +97,16 @@
   </script>
 
   <style scoped>
+  h3 {
+    color:white;
+  }
+  h2 {
+    color:white;
+  }
+
+  .container{
+    background-color: rgb(18, 18, 24);
+  }
   .saalContainer{
     display: flex;
     flex-direction: column;
